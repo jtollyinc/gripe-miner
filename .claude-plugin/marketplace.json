@@ -5,7 +5,7 @@
   "plugins": [
     {
       "name": "gripe-miner",
-      "source": ".",
+      "source": "./plugins/gripe-miner",
       "description": "Turn your own Claude Code frustration into a ranked, code-verified fix list.",
       "keywords": ["productivity", "backlog", "self-review"]
     }
