@@ -14,29 +14,36 @@ Bash tool before continuing (use `python3` if `python` isn't found):
 
     python "${CLAUDE_SKILL_DIR}/scripts/mine_gripes.py" --cwd "${CLAUDE_PROJECT_DIR}"
 
-## Step 2 — your job
+## Step 2 — triage against CURRENT reality (this is the whole value)
 
-The block above is JSON: gripe snippets the user actually typed in past Claude Code
-sessions of THIS project, most recent first. Turn them into a short, honest,
-verified fix list.
+The block above is a list of **leads, not a to-do list.** Each was typed days or weeks
+ago and **many are already fixed.** Your job is to find the few that are *still broken
+today.* Be skeptical; default to dropping.
 
-For each candidate:
-- Use Read/Grep/Glob to **confirm the issue is real in the current code** before you
-  report it. If you can't find the code it refers to, drop it — no speculation.
-- Ignore any snippet that is obviously a pasted prompt, spec, or instruction block
-  rather than a genuine complaint.
-- Merge duplicates and near-duplicates. The **same** complaint recurring across
-  sessions is a *stronger* signal, not a reason to list it twice — note how many
-  times it came up.
+For each candidate, in order:
 
-Then write the **top 3–5** highest-signal, highest-confidence items to the file named
-in the arguments (default: `GRIPES.md` in the project root), as a checklist. Format
-each line exactly like this:
+1. **Confirm it's real.** Use Read/Grep/Glob to find the code it refers to. Can't find
+   it, or it's obviously a pasted prompt/spec rather than a complaint → drop.
+2. **Check if it was already resolved after it was raised.** Each snippet has a date.
+   Use the Bash tool to see whether the relevant area changed since then:
+
+       git log --oneline --since="<gripe date>" -- <path/to/relevant/files>
+
+   Read the commit subjects (and `git show` if unsure). If a later commit plausibly
+   addresses the gripe, **drop it** and note "(looks fixed in <hash>)".
+3. **Subjective/UX gripes you can't verify from code** ("feels clunky", "confusing") →
+   drop unless the thing described is still plainly present in the code/UI.
+4. **Merge duplicates**; note the recurrence count.
+
+Then write the **top 3–5 still-open** items to the file named in the arguments
+(default: `GRIPES.md` in the project root), as a checklist. Format each line exactly:
 
     - [ ] [area] symptom — the file it lives in + the fix in one clause  _(you said: "<short quote>", xN)_
 
 Rules:
-- **Precision over recall.** Two solid, real items beat five padded ones.
-- An empty result is a valid, honest answer. If nothing clears the bar, write
-  nothing and say so — never invent work.
-- Rank by: (1) friction voiced repeatedly, (2) confirmed bugs, (3) clear quick wins.
+- **Default to dropping when unsure.** Better 2 confirmed-open items than 5 that might
+  already be done — a stale list is worse than a short one.
+- End the file with a one-line tally: `_Triaged N leads → M still open, K looked
+  already-fixed, rest unverifiable._` so the user can see you actually checked.
+- An empty result is a valid, honest answer. If nothing clears the bar, write nothing
+  and say so — never invent work.
