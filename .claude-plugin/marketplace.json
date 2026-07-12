@@ -1,0 +1,13 @@
+{
+  "name": "jtolly-tools",
+  "description": "Standalone Claude Code tools by Jaron Tolly.",
+  "owner": { "name": "Jaron Tolly" },
+  "plugins": [
+    {
+      "name": "gripe-miner",
+      "source": ".",
+      "description": "Turn your own Claude Code frustration into a ranked, code-verified fix list.",
+      "keywords": ["productivity", "backlog", "self-review"]
+    }
+  ]
+}

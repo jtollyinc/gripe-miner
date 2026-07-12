@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Gripe Miner output (generated in target projects, not this repo)
+GRIPES.md
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

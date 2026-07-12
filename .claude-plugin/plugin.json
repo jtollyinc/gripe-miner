@@ -1,0 +1,10 @@
+{
+  "name": "gripe-miner",
+  "version": "0.1.0",
+  "description": "Mines your own Claude Code transcripts for the moments you got frustrated, then turns them into a ranked, code-verified fix list.",
+  "author": { "name": "Jaron Tolly" },
+  "homepage": "https://github.com/jtolly/gripe-miner",
+  "repository": "https://github.com/jtolly/gripe-miner",
+  "license": "MIT",
+  "keywords": ["productivity", "transcripts", "backlog", "todo", "self-review", "developer-tools"]
+}
