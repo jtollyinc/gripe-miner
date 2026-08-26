@@ -2,7 +2,7 @@
   "name": "gripe-miner",
   "version": "0.1.0",
   "description": "Mines your own Claude Code transcripts for the moments you got frustrated, then turns them into a ranked, code-verified fix list.",
-  "author": { "name": "Jaron Tolly" },
+  "author": { "name": "JTolly", "url": "https://jollydesk.work" },
   "homepage": "https://github.com/jtollyinc/gripe-miner",
   "repository": "https://github.com/jtollyinc/gripe-miner",
   "license": "MIT",

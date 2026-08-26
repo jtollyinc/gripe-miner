@@ -59,4 +59,4 @@ rename it to `hooks/hooks.json` to opt in.
 
 ## License
 
-MIT © 2026 Jaron Tolly
+MIT © 2026 [JTolly](https://jollydesk.work)

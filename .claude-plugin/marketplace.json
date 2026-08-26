@@ -1,7 +1,7 @@
 {
   "name": "jtolly-tools",
-  "description": "Standalone Claude Code tools by Jaron Tolly.",
-  "owner": { "name": "Jaron Tolly" },
+  "description": "Standalone Claude Code tools by JTolly.",
+  "owner": { "name": "JTolly", "url": "https://jollydesk.work" },
   "plugins": [
     {
       "name": "gripe-miner",
