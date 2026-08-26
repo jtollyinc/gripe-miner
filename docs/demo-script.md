@@ -37,7 +37,7 @@ edit around a single frame: **a gripe with `x3` next to it.**
 Install lines for the end card:
 
 ```
-/plugin marketplace add jtolly/gripe-miner
+/plugin marketplace add jtollyinc/gripe-miner
 /plugin install gripe-miner@jtolly-tools
 ```
 
@@ -57,4 +57,4 @@ Install lines for the end card:
 
 ## Bio link
 
-Point at `https://github.com/jtolly/gripe-miner` (push the repo first — see README).
+Point at `https://github.com/jtollyinc/gripe-miner` (push the repo first — see README).

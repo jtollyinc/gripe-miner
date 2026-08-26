@@ -64,11 +64,11 @@ verifies each against the code with Read/Grep/Glob, merges repeats, writes the t
 ### Distribution
 
 ```
-/plugin marketplace add jtolly/gripe-miner
+/plugin marketplace add jtollyinc/gripe-miner
 /plugin install gripe-miner@jtolly-tools
 ```
 
-(Requires pushing this repo to GitHub as `jtolly/gripe-miner` first.)
+(Requires pushing this repo to GitHub as `jtollyinc/gripe-miner` first.)
 
 ### Demo video (~40s)
 

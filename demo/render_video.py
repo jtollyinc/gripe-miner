@@ -172,7 +172,7 @@ def frame_at(tg):
         d.text((W // 2, 680), "your frustration, productized", font=cap_med, fill=DIM, anchor="mm")
         d.rectangle([48, 860, W - 48, 1130], fill=PANEL)
         d.text((84, 910), "/plugin marketplace add", font=mono_big, fill=GREEN)
-        d.text((84, 970), "    jtolly/gripe-miner", font=mono_big, fill=FG)
+        d.text((84, 970), "    jtollyinc/gripe-miner", font=mono_big, fill=FG)
         d.text((84, 1040), "/plugin install", font=mono_big, fill=GREEN)
         d.text((84, 1100), "    gripe-miner@jtolly-tools", font=mono_big, fill=FG)
         caption(d, "Free  ·  MIT  ·  100% local", 1300, cap_med, YELLOW)

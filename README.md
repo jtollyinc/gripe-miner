@@ -16,7 +16,7 @@ answer, and it never pads the list.
 ## Install
 
 ```
-/plugin marketplace add jtolly/gripe-miner
+/plugin marketplace add jtollyinc/gripe-miner
 /plugin install gripe-miner@jtolly-tools
 ```
 
