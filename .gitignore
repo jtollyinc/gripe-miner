@@ -4,8 +4,10 @@ __pycache__/
 *.egg-info/
 .venv/
 
-# Gripe Miner output (generated in target projects, not this repo)
+# Miner output (generated in target projects, not this repo)
 GRIPES.md
+PATTERNS.md
+SESSION-INSIGHTS.md
 
 # Editor / OS
 .DS_Store

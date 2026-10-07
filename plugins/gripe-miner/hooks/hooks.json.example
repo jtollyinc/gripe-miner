@@ -1,5 +1,5 @@
 {
-  "//": "OPTIONAL nudge hook. Off by default (this file is named .example so Claude Code does NOT auto-load it). To enable: rename to hooks.json. On each session start it prints a one-line count of un-triaged gripes and stays SILENT when there are none. Keep it opt-in so the tool honours 'silence over noise'.",
+  "//": "OPTIONAL nudge hook. Off by default (this file is named .example so Claude Code does NOT auto-load it). To enable: rename to hooks.json. On each session start it prints a one-line count of un-triaged gripes AND un-triaged session patterns, staying SILENT on either line when there's nothing to report. Keep it opt-in so the tool honours 'silence over noise'.",
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +9,11 @@
             "type": "command",
             "async": true,
             "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/mine_gripes.py\" --cwd \"${CLAUDE_PROJECT_DIR}\" --count-only"
+          },
+          {
+            "type": "command",
+            "async": true,
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/mine_patterns.py\" --cwd \"${CLAUDE_PROJECT_DIR}\" --count-only"
           }
         ]
       }

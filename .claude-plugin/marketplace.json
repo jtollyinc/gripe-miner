@@ -6,8 +6,8 @@
     {
       "name": "gripe-miner",
       "source": "./plugins/gripe-miner",
-      "description": "Turn your own Claude Code frustration into a ranked, code-verified fix list.",
-      "keywords": ["productivity", "backlog", "self-review"]
+      "description": "Gripe Miner + Session Patterns: turn your own Claude Code frustration AND the loops you keep repeating into a ranked, code-verified fix list.",
+      "keywords": ["productivity", "backlog", "self-review", "session-patterns", "retrospective"]
     }
   ]
 }

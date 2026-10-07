@@ -154,3 +154,77 @@ Ship the **plugin first** (this weekend): nearly free to build, gets you through
 whole build → publish → post loop once on low stakes, and the dev audience's trust
 is the foundation for launch #2. Then the extension lands with the "…and here's the
 same idea for everyone" hook already set up.
+
+---
+
+## Part C — combined plugin: Gripe Miner + Session Patterns (v0.2.0, 2026-10-07)
+
+### Why combined, not a second marketplace plugin
+
+The Session Patterns promo pack (`/opt/jollydesk/work/session-patterns-promo/`)
+frames Session Patterns as a sibling product with *soft* ancestry to Gripe Miner —
+own name, own one-pager, own CTA. Jaron overrode that for the plugin itself: one
+install, two reinforcing lenses, more power per line of install instructions than
+two separate marketplace entries would give a Claude Code user. The marketplace
+identity stays `gripe-miner` (same `plugin.json` name, same GitHub repo target);
+only user-facing copy (README, descriptions) says "Gripe Miner + Session Patterns."
+If Session Patterns ever graduates to its own standalone pitch (site page, video),
+that's a marketing decision layered on top — it doesn't require forking the plugin.
+
+### What Session Patterns is, here
+
+Not a shipped product being extracted (unlike Part A, which extracted real regex
+from `weekend_scan.py`). The one-pager and 90s script describe a *promise*
+("repeating themes: same stuck point, same missing context, same 'I'll fix that
+later'") with no reference implementation. Part C's classifier (`classify_patterns.py`)
+is a v0 invention from those themes, split into four regex-detected labels: `stuck`,
+`missing-context`, `deferral`, `reteach`. Treat it as a first draft that needs tuning
+against real triage results — the gripe classifier had years of real Weekend Scan
+runs behind its regex; this one doesn't yet.
+
+### Structure (added to the Part A layout)
+
+```
+plugins/gripe-miner/
+├── .claude-plugin/plugin.json      version 0.2.0, description covers both lenses
+├── skills/
+│   ├── gripe-miner/SKILL.md        moved from plugin root (was single-skill-at-root)
+│   ├── session-patterns/SKILL.md   new — mirrors gripe-miner's triage rigor
+│   └── patterns/SKILL.md           new — unified: runs both, cross-links, merges
+├── scripts/
+│   ├── lib/
+│   │   ├── transcripts.py          shared walker: transcript_dir, strip_injections, mine()
+│   │   ├── classify_gripes.py      COMPLAINT_RE / NOISE_RE / NOTIFY_START_RE (moved verbatim)
+│   │   └── classify_patterns.py    new — four theme regexes, reuses gripes' noise filters
+│   ├── mine_gripes.py              thin CLI now, same flags/output as Part A
+│   └── mine_patterns.py            new CLI, same flag surface, outputs {"patterns": [...]}
+└── hooks/hooks.json.example        now nudges both miners' counts, still opt-in
+```
+
+Moving the sole `SKILL.md` out of the plugin root and under `skills/<name>/` was
+required once a second and third skill needed to coexist — Claude Code's plugin
+layout only supports one root-level `SKILL.md`. All three skills reference scripts
+via `${CLAUDE_PLUGIN_ROOT}/scripts/...` (not `${CLAUDE_SKILL_DIR}`) so the path holds
+regardless of which skill's directory is resolved.
+
+### Reinforcement — the mechanism, concretely
+
+`/patterns` runs both miners, triages each list with the same per-item rigor as the
+solo skills (verify against code, check `git log` for fixes, drop stale leads), then
+does one more pass: read both triaged lists and look for a gripe and a pattern that
+point at the same area (same file/feature/symptom). That's a **model judgment call**,
+not a script step — "same area" isn't reliably regex-matchable across two
+differently-worded snippets. Matches get promoted to a `Reinforced` section, ranked
+above either lens alone, citing both the gripe quote and the pattern's recurrence
+count. This is documented as a known soft spot: no automated test can verify the
+cross-link logic beyond "does the skill body instruct it correctly," since the
+judgment happens inside a live Claude session, not in `mine_patterns.py`.
+
+### Open questions for Jaron
+
+- Tune `classify_patterns.py`'s four regexes once real `/session-patterns` runs
+  produce false positives/negatives — v0 is a best-guess from the one-pager, not
+  measured against real transcripts the way the gripe regex was.
+- Decide whether Session Patterns ever gets its own marketing moment (the promo pack
+  still exists, untouched, at `/opt/jollydesk/work/session-patterns-promo/`) separate
+  from "it's a mode of Gripe Miner."

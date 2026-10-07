@@ -1,10 +1,10 @@
 {
   "name": "gripe-miner",
-  "version": "0.1.0",
-  "description": "Mines your own Claude Code transcripts for the moments you got frustrated, then turns them into a ranked, code-verified fix list.",
+  "version": "0.2.0",
+  "description": "Gripe Miner + Session Patterns: mines your own Claude Code transcripts two ways — moments you got frustrated, and loops that keep repeating (stuck points, re-explaining, deferred fixes, re-setup) — verified against your code, written to a ranked, code-verified backlog.",
   "author": { "name": "JTolly", "url": "https://jollydesk.work" },
   "homepage": "https://github.com/jtollyinc/gripe-miner",
   "repository": "https://github.com/jtollyinc/gripe-miner",
   "license": "MIT",
-  "keywords": ["productivity", "transcripts", "backlog", "todo", "self-review", "developer-tools"]
+  "keywords": ["productivity", "transcripts", "backlog", "todo", "self-review", "developer-tools", "session-patterns", "retrospective"]
 }

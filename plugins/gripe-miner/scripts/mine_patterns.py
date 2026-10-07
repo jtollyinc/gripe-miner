@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 r"""
-Gripe Miner — read this project's Claude Code transcripts and surface the moments
-you got frustrated, so they can be turned into a ranked fix list.
+Session Patterns miner — read this project's Claude Code transcripts and surface
+repeating loops: the same stuck point, the same re-explaining, the same "I'll fix
+that later," the same re-setup. Patterns, not gripes — a sibling lens over the
+same transcript mine as mine_gripes.py.
 
 Stdlib only. Cross-platform. Reads nothing but your own local ~/.claude transcripts;
 writes nothing (prints JSON to stdout). No network calls, ever.
 
 Usage:
-    python mine_gripes.py --cwd "C:\path\to\project"    # mine one project's history
-    python mine_gripes.py --all                          # mine every project
-    python mine_gripes.py --cwd . --count-only           # just a one-line count
+    python mine_patterns.py --cwd "C:\path\to\project"    # mine one project's history
+    python mine_patterns.py --all                          # mine every project
+    python mine_patterns.py --cwd . --count-only           # just a one-line count
 """
 import argparse
 import datetime
@@ -17,7 +19,6 @@ import json
 import os
 import sys
 
-# Windows consoles default to cp1252 and choke on smart quotes / bullets; force UTF-8.
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
@@ -25,11 +26,11 @@ except (AttributeError, ValueError):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.transcripts import transcript_dir, all_project_dirs, mine  # noqa: E402
-from lib.classify_gripes import classify  # noqa: E402
+from lib.classify_patterns import classify  # noqa: E402
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Mine Claude Code transcripts for gripes.")
+    ap = argparse.ArgumentParser(description="Mine Claude Code transcripts for repeating session patterns.")
     ap.add_argument("--cwd", default=os.getcwd(), help="Project whose transcripts to mine.")
     ap.add_argument("--days", type=int, default=60, help="How far back to look (days).")
     ap.add_argument("--limit", type=int, default=60, help="Max snippets to return.")
@@ -44,22 +45,21 @@ def main():
     hits = hits[:a.limit]
 
     if a.count_only:
-        # Silence over noise: print nothing when there's nothing worth surfacing.
         if hits:
-            print(f"gripe-miner: {len(hits)} complaint(s) across {scanned} session(s) "
-                  f"in the last {a.days} days - run /gripe-miner to triage.")
+            print(f"session-patterns: {len(hits)} recurring theme(s) across {scanned} session(s) "
+                  f"in the last {a.days} days - run /session-patterns to triage.")
         return
 
     if not dirs:
         print(json.dumps({
-            "gripes": [], "scanned_sessions": 0, "project": os.path.abspath(a.cwd),
+            "patterns": [], "scanned_sessions": 0, "project": os.path.abspath(a.cwd),
             "note": "No Claude Code transcript folder found for this project. "
                     "Try --all, or check ~/.claude/projects.",
         }, indent=2))
         return
 
     print(json.dumps({
-        "gripes": [{"date": ts, "text": s} for ts, s, _label in hits],
+        "patterns": [{"date": ts, "theme": label, "text": s} for ts, s, label in hits],
         "scanned_sessions": scanned,
         "project": os.path.abspath(a.cwd),
     }, indent=2, ensure_ascii=False))
