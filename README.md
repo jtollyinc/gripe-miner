@@ -149,10 +149,11 @@ the first two.
   "same words" becomes "same ask". Prompts over 4,000 characters are skipped as
   pasted material, so a routine that pastes long payloads is under-counted.
 - The human / scripted / injected split relies on the `promptSource` and
-  `turnOrigin` fields Claude Code 2.1.25x+ writes on each user turn. Older
-  transcripts lack them and fall back to a text-shape test (role-prompt preambles,
-  markdown-headed briefs, probe phrasing); a person who opens a message with
-  `# Title` or `You are a…` will be mistaken for a script there.
+  `turnOrigin` fields Claude Code writes on each user turn (verified on 2.1.258
+  and 2.1.278; when they were introduced is not known). Transcripts without them
+  fall back to a text-shape test (role-prompt preambles, markdown-headed briefs,
+  probe phrasing); a person who opens a message with `# Title` or `You are a…`
+  will be mistaken for a script there.
 - Subagent spend is not attributed; usage before the first prompt of a resumed
   session is dropped. Token totals are floors.
 

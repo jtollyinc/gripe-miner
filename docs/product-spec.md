@@ -253,9 +253,10 @@ what it *costs* — and what to build so you stop paying it.
   id carried an identical usage snapshot — so dedup by `message.id` is both
   necessary and sufficient. Fallbacks: `requestId`, then the line `uuid`.
 - Each user turn is tagged `promptSource` (`typed` / `sdk` / `system`) and
-  `turnOrigin` (`human` / `sdk` / `task_notification` / `peer`) by Claude Code
-  2.1.25x+. Untagged turns on current versions were all harness-generated
-  (image captions, token-limit notices); on older versions they could be anything.
+  `turnOrigin` (`human` / `sdk` / `task_notification` / `peer`) — seen on Claude
+  Code 2.1.258 and 2.1.278; when the tags were introduced is not known. Untagged
+  turns on those versions were all harness-generated (image captions, token-limit
+  notices); on older versions they could be anything.
 - A `cost-state` line per session carries Claude Code's own per-model totals. The
   miner's per-session sums matched it exactly in 705 of 738 sessions and never
   exceeded it (the under-counts are subagent transcripts, which are not walked).
