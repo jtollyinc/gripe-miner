@@ -11,13 +11,15 @@ Three gates run before clustering, in this order:
 
 1. origin  — Claude Code tags every user turn with promptSource / turnOrigin
              (see transcripts.prompt_origin). Turns the harness wrote itself
-             (notifications, peer-agent messages, image captions) are never
-             asks. Turns sent by a script (`claude -p`, the Agent SDK, a cron
-             job) are ALREADY automated, so they are skipped by default and only
-             clustered with include_scripted=True, where the cluster is flagged
-             "scripted" so the skill talks about that routine's cost instead of
-             proposing to automate an automation. Untagged turns (older Claude
-             Code versions) fall back to the text-shape test SCRIPTED_SHAPE_RE.
+             (notifications, peer-agent messages, image captions, resume
+             nudges) are never asks. Turns sent by a script (`claude -p`, the
+             Agent SDK, a cron job) and slash-command invocations (origin
+             "command": /deep-research, /commit ...) are ALREADY automated, so
+             they are skipped by default and only clustered with
+             include_scripted=True, where the cluster is flagged "scripted" so
+             the skill talks about that routine's cost instead of proposing to
+             automate an automation. Untagged turns (older Claude Code
+             versions) fall back to the text-shape test SCRIPTED_SHAPE_RE.
 2. shape   — pure acknowledgements ("yes", "ok", "continue") are not asks, and
              giant pastes (briefs, specs, logs) over GIANT_PASTE_CHAR_CAP are
              not something anyone retypes.
@@ -51,10 +53,20 @@ GIANT_PASTE_CHAR_CAP = 4000
 
 # Harness-written text that reaches the transcript as a "user" turn. Always
 # dropped, whatever the origin tag says. Built from the prefixes actually seen
-# on real transcripts, not guessed.
+# on real transcripts, not guessed. The resume nudge has been reworded across
+# Claude Code versions ("Your response above was stopped by the token limit",
+# "...was stopped by a safety classifier", "...was cut off mid-stream. Resume
+# directly from where it stops"), so that branch matches the sentence shape —
+# "your response/reply/output (above) was|got|has been stopped|cut off|
+# interrupted|truncated" — rather than one wording. It is anchored at the start
+# and needs the "your response ... was <halted>" frame, so "your response above
+# was good, now add tests" or "cut off the trailing whitespace" stay asks.
 INJECTED_RE = re.compile(
     r"^(?:\[image:|\[request interrupted|output token limit hit|"
-    r"your response above was stopped|another claude session sent a message|"
+    r"your (?:response|reply|output|answer|message)(?: above| earlier| so far)?"
+    r" (?:was|got|has been|is being) (?:stopped|cut off|interrupted|truncated|halted)|"
+    r"(?:the|your) (?:previous|last|prior) (?:response|reply|output|message) was (?:cut off|truncated|interrupted)|"
+    r"another claude session sent a message|"
     r"this session is being continued from a previous conversation|"
     r"base directory for this skill:|caveat: the messages below|"
     r"api error|<task-notification>|<agent-message)",
@@ -79,7 +91,9 @@ ACK_RE = re.compile(
     r"^(?:(?:yes|yep|yeah|ya|y|ok|okay|k|kk|sure|fine|good|great|cool|nice|perfect|right|correct|"
     r"go|go ahead|go for it|do it|ship it|continue|proceed|next|keep going|carry on|resume|"
     r"sounds good|looks good|lgtm|approved|agreed|thanks|thank you|thx|ty|no|nope|nah|"
-    r"please|yes please|please continue|please proceed|continue from where you left off)"
+    r"please|yes please|please continue|please proceed|"
+    r"(?:please )?(?:continue|resume|pick up|carry on)(?: from)? where you left off|"
+    r"(?:please )?(?:continue|resume) from where (?:it|you) (?:stopped|stops|left off))"
     r"[\s.!,]*)+$",
     re.IGNORECASE,
 )
@@ -159,10 +173,16 @@ def template_key(norm):
 
 def ineligible_reason(prompt, include_scripted=False):
     """Why this prompt can't be an ask to automate, or None if it can.
-    Also decides prompt["scripted"] (True when a script, not a person, sent it)."""
+    Also decides prompt["scripted"] (True when a script, not a person, sent it,
+    or when it is a slash command — already automated either way)."""
     text = prompt["text"].lstrip("\ufeff").strip()
     origin = prompt.get("origin", "unknown")
-    prompt["scripted"] = origin == "scripted"
+    prompt["scripted"] = origin in ("scripted", "command")
+    if origin == "command":
+        # A slash command (/deep-research, /commit ...) is an automation that
+        # already exists; its expanded body never reaches here (transcripts
+        # folds it into this record). Clustered only on request, as a cost line.
+        return None if include_scripted else "command"
     if origin == "injected" or INJECTED_RE.match(text) or NOTIFY_START_RE.match(text):
         return "injected"
     if origin == "unknown" and SCRIPTED_SHAPE_RE.match(text):
@@ -191,7 +211,7 @@ def cluster(prompts, include_scripted=False):
     index = {}  # significant word -> [cluster index, ...] (anchor words only)
     templates = {}  # template_key -> cluster index of the first cluster opened with it
     stats = {"total": 0, "eligible": 0,
-             "skipped": {"injected": 0, "scripted": 0, "too_long": 0, "ack": 0, "too_short": 0}}
+             "skipped": {"injected": 0, "scripted": 0, "command": 0, "too_long": 0, "ack": 0, "too_short": 0}}
     for p in prompts:
         stats["total"] += 1
         reason = ineligible_reason(p, include_scripted)

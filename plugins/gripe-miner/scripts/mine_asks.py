@@ -14,9 +14,14 @@ prompt, deduplicated by message id so streamed chunks aren't double counted. A t
 with no usage field falls back to a chars/4 estimate and flags its cluster
 "tokens_estimated": true. Nothing is invented beyond that fallback.
 
-Prompts sent by scripts (`claude -p`, the Agent SDK, cron jobs) are already
-automated, so they are skipped by default; --include-scripted clusters them too,
-flagged "scripted", when you want to see what your routines cost.
+Prompts sent by scripts (`claude -p`, the Agent SDK, cron jobs) and slash-command
+runs (/deep-research, /commit ...) are already automated, so they are skipped by
+default; --include-scripted clusters them too, flagged "scripted", when you want
+to see what your routines cost.
+
+--days is applied per message by its own timestamp (file mtime only when a record
+has none), so a long-running session file contributes only the prompts inside the
+window.
 
 Usage:
     python mine_asks.py --cwd "C:\path\to\project"    # mine one project's history
@@ -52,7 +57,7 @@ def main():
     ap.add_argument("--min-sessions", type=int, default=3,
                     help="Distinct sessions a cluster must span to count (default 3).")
     ap.add_argument("--include-scripted", action="store_true",
-                    help="Also cluster prompts sent by scripts / claude -p (flagged \"scripted\").")
+                    help="Also cluster prompts sent by scripts / claude -p and slash-command runs (flagged \"scripted\").")
     ap.add_argument("--all", action="store_true", help="Mine every project, not just --cwd.")
     ap.add_argument("--count-only", action="store_true", help="Print a one-line count, not JSON.")
     a = ap.parse_args()
@@ -61,7 +66,9 @@ def main():
     dirs = all_project_dirs() if a.all else [d for d in [transcript_dir(a.cwd)] if d]
 
     # Same "scanned" semantics as mine_gripes.py / mine_patterns.py: every *.jsonl
-    # inside the window counts, whether or not it yielded a prompt.
+    # touched inside the window is opened and counts, whether or not it yielded a
+    # prompt. The window itself is applied per message (see iter_prompts), so a
+    # recently-touched file contributes only the prompts actually in it.
     scanned = 0
     for tdir in dirs:
         for path in glob.glob(os.path.join(tdir, "*.jsonl")):
@@ -100,6 +107,7 @@ def main():
         "token_totals": token_totals,
         "prompts": stats,
         "days": a.days,
+        "since": datetime.datetime.fromtimestamp(cutoff).strftime("%Y-%m-%d"),
         "min_sessions": a.min_sessions,
         "include_scripted": a.include_scripted,
         "weighting": WEIGHTS,
@@ -108,7 +116,8 @@ def main():
     if not clusters:
         out["note"] = (f"Nothing repeats across {a.min_sessions}+ sessions in the last {a.days} days"
                        + ("" if a.include_scripted else
-                          f" ({stats['skipped']['scripted']} script-sent prompts were skipped; "
+                          f" ({stats['skipped']['scripted']} script-sent prompts and "
+                          f"{stats['skipped']['command']} slash-command runs were skipped; "
                           f"--include-scripted clusters those too)") + ".")
     print(json.dumps(out, indent=2, ensure_ascii=False))
 
