@@ -2,7 +2,6 @@
 
 **Your Claude Code transcripts already know what's wasting your time. This plugin reads them back: the things you complained about, the loops you keep hitting, and the prompts you keep retyping, with the tokens each one has burned.**
 
-<!-- TODO(demo): drop demo/gripe-miner-demo.gif into demo/ and this line goes live. -->
 ![Gripe Miner demo](demo/gripe-miner-demo.gif)
 
 One plugin, three lenses over the same local transcript mine:
