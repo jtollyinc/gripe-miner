@@ -1,13 +1,24 @@
 {
   "name": "jtolly-tools",
   "description": "Standalone Claude Code tools by JTolly.",
-  "owner": { "name": "JTolly", "url": "https://jollydesk.work" },
+  "owner": {
+    "name": "JTolly",
+    "url": "https://jollydesk.work"
+  },
   "plugins": [
     {
       "name": "gripe-miner",
       "source": "./plugins/gripe-miner",
-      "description": "Gripe Miner + Session Patterns: turn your own Claude Code frustration AND the loops you keep repeating into a ranked, code-verified fix list.",
-      "keywords": ["productivity", "backlog", "self-review", "session-patterns", "retrospective"]
+      "description": "Gripe Miner + Session Patterns + Automate: turn your own Claude Code frustration, the loops you keep repeating, and the prompts you keep retyping (with their token cost) into a ranked, code-verified fix list plus automation suggestions.",
+      "keywords": [
+        "productivity",
+        "backlog",
+        "self-review",
+        "session-patterns",
+        "retrospective",
+        "automation",
+        "token-usage"
+      ]
     }
   ]
 }

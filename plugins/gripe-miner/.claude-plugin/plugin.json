@@ -1,10 +1,25 @@
 {
   "name": "gripe-miner",
-  "version": "0.2.0",
-  "description": "Gripe Miner + Session Patterns: mines your own Claude Code transcripts two ways — moments you got frustrated, and loops that keep repeating (stuck points, re-explaining, deferred fixes, re-setup) — verified against your code, written to a ranked, code-verified backlog.",
-  "author": { "name": "JTolly", "url": "https://jollydesk.work" },
+  "version": "0.3.0",
+  "description": "Gripe Miner + Session Patterns + Automate: mines your own Claude Code transcripts three ways — moments you got frustrated, loops that keep repeating (stuck points, re-explaining, deferred fixes, re-setup), and the asks you keep retyping by hand together with the tokens they burn — each verified against your code and written to a ranked backlog; the third lens proposes the cheapest durable automation for each repeated ask (skill, hook, script, scheduled routine, CLAUDE.md line, MCP connector).",
+  "author": {
+    "name": "JTolly",
+    "url": "https://jollydesk.work"
+  },
   "homepage": "https://github.com/jtollyinc/gripe-miner",
   "repository": "https://github.com/jtollyinc/gripe-miner",
   "license": "MIT",
-  "keywords": ["productivity", "transcripts", "backlog", "todo", "self-review", "developer-tools", "session-patterns", "retrospective"]
+  "keywords": [
+    "productivity",
+    "transcripts",
+    "backlog",
+    "todo",
+    "self-review",
+    "developer-tools",
+    "session-patterns",
+    "retrospective",
+    "automation",
+    "token-usage",
+    "cost"
+  ]
 }

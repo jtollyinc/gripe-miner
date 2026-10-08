@@ -228,3 +228,111 @@ judgment happens inside a live Claude session, not in `mine_patterns.py`.
 - Decide whether Session Patterns ever gets its own marketing moment (the promo pack
   still exists, untouched, at `/opt/jollydesk/work/session-patterns-promo/`) separate
   from "it's a mode of Gripe Miner."
+
+---
+
+## Part D — third lens: "Automate this" (v0.3.0, 2026-10-07)
+
+### The ask, verbatim
+
+> "can we have it go as far as suggesting tools or routines or automations for
+> things a user keeps asking for and burning lots of tokens, I think that's where
+> this could really be useful."
+
+Gripes say what annoyed you; patterns say what keeps recurring; this lens says
+what it *costs* — and what to build so you stop paying it.
+
+### What the transcripts actually contain (verified, not assumed)
+
+- Every assistant line carries `message.usage.{input_tokens, output_tokens,
+  cache_creation_input_tokens, cache_read_input_tokens}` plus a
+  `cache_creation.{ephemeral_5m_input_tokens, ephemeral_1h_input_tokens}` split.
+  On the build machine 17,132 of 17,132 assistant lines had it.
+- Claude Code writes one JSONL line per streamed content block. 5,730 of 8,456
+  message ids spanned more than one line (up to 19), and every line of the same
+  id carried an identical usage snapshot — so dedup by `message.id` is both
+  necessary and sufficient. Fallbacks: `requestId`, then the line `uuid`.
+- Each user turn is tagged `promptSource` (`typed` / `sdk` / `system`) and
+  `turnOrigin` (`human` / `sdk` / `task_notification` / `peer`) by Claude Code
+  2.1.25x+. Untagged turns on current versions were all harness-generated
+  (image captions, token-limit notices); on older versions they could be anything.
+- A `cost-state` line per session carries Claude Code's own per-model totals. The
+  miner's per-session sums matched it exactly in 705 of 738 sessions and never
+  exceeded it (the under-counts are subagent transcripts, which are not walked).
+
+### Pipeline (added to the Part C layout)
+
+```
+scripts/
+├── lib/
+│   ├── transcripts.py      + prompt_origin(), iter_prompts()  — mine() untouched
+│   └── classify_asks.py    gates → normalise → cluster → score
+├── mine_asks.py            CLI, same flag surface as its siblings + --min-sessions, --include-scripted
+skills/
+├── automate/SKILL.md       /automate → AUTOMATIONS.md
+└── patterns/SKILL.md       now runs all three, adds "Automate this" section
+```
+
+`iter_prompts()` yields one record per user prompt with the usage of every
+assistant message up to the next prompt attached. Tool results, sidechain prompts
+and harness turns don't start a new record, so their follow-on usage stays with
+the human prompt that caused it. A turn without usage is estimated at
+`len(text)//4` output tokens and flags the record `estimated`.
+
+`classify_asks` runs three gates (origin → shape → content), normalises (lowercase;
+strip URLs, paths, ids, numbers, punctuation; drop function words but keep action
+verbs — the verb *is* the ask), then clusters greedily: a prompt joins a cluster
+when its first six significant words match in order (a templated opener with a
+variable payload is one routine) or when Jaccard over significant words against
+the cluster's first member is ≥ 0.6. Clusters survive only across ≥ 3 distinct
+sessions (configurable). Score = `count × weighted`, where `weighted` is
+input-token equivalents at list-price ratios (output ×5, cache write ×1.25 or ×2
+for the 1-hour TTL, cache read ×0.1) — documented in the JSON itself under
+`weighting` and `score`.
+
+### Scripted prompts are a cost finding, not a candidate
+
+Prompts tagged `sdk` were sent by a script, a cron job or `claude -p` — they are
+already automations, so suggesting to automate them is circular. They are skipped
+by default (`prompts.skipped.scripted` says how many) and included with
+`--include-scripted` as `"scripted": true` clusters, which the skill may report
+under "Routines and what they cost" (cheaper model, tighter prompt, fewer runs)
+but never as an automation suggestion. On the build machine this distinction was
+the whole ballgame: 901 of 1,292 prompts in the window were script-sent, 3 were
+human-typed, and the two biggest routines fired 240 and 44 times.
+
+### The suggestion step
+
+`/automate` triages like its siblings (one ask? already automated? still
+applies?) and then picks the first row of a fixed table that fully covers the
+ask: CLAUDE.md line → script/CLI → skill → hook → scheduled routine → MCP, in
+that order because cheaper and more durable comes first and no-model beats model.
+Every suggestion carries the user's own words with count and sessions, the tokens
+burned so far (marked estimated when flagged), the fix type and why, a concrete
+sketch, and a savings figure that is always labeled an estimate with its
+assumption shown (observed rate × assumed per-ask reduction: 30–50 % for a skill
+or CLAUDE.md line, 90 %+ when the model leaves the loop). Suggest-only: the skill
+never edits settings, hooks, crontabs or CLAUDE.md, and writes a draft
+`.claude/skills/<name>/SKILL.md` only after an explicit yes in the next message.
+
+### Cross-boost in /patterns
+
+Model judgment, not script. A script-level join was considered and rejected: the
+three JSON lists sit side by side in context, and word overlap between a gripe
+and an ask is a hint the model can already see, not a proof worth encoding. The
+rule the skill applies: an ask that matches a gripe or a `stuck` / `reteach` /
+`missing-context` pattern in the same area ranks first under "Automate this", and
+the pattern picks the fix type (re-teach + repeated ask → CLAUDE.md line; stuck +
+repeated ask → script or hook).
+
+### Open questions for Jaron
+
+- The default excludes script-sent prompts. On a box like jollyserver, where
+  almost everything arrives via claude-job, `/automate` will mostly say "nothing
+  repeats" — the interesting view there is `--include-scripted`. Should the skill
+  auto-fall-back to that mode when `prompts.eligible` is tiny?
+- Subagent spend and the 4,000-character paste cap both make totals floors. Worth
+  lifting either once a real `/automate` run shows it matters.
+- Thresholds (Jaccard 0.6, six-word template opener, three sessions) were set for
+  precision on synthetic and this box's data, not tuned on a laptop full of
+  genuinely typed prompts. First real run on jtollygr is the tuning data.
