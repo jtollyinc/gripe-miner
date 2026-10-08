@@ -328,7 +328,7 @@ repeated ask → script or hook).
 
 ### Open questions for Jaron
 
-- The default excludes script-sent prompts. On a box like jollyserver, where
+- The default excludes script-sent prompts. On a box where
   almost everything arrives via claude-job, `/automate` will mostly say "nothing
   repeats" — the interesting view there is `--include-scripted`. Should the skill
   auto-fall-back to that mode when `prompts.eligible` is tiny?
@@ -336,4 +336,4 @@ repeated ask → script or hook).
   lifting either once a real `/automate` run shows it matters.
 - Thresholds (Jaccard 0.6, six-word template opener, three sessions) were set for
   precision on synthetic and this box's data, not tuned on a laptop full of
-  genuinely typed prompts. First real run on jtollygr is the tuning data.
+  genuinely typed prompts. First real run on an interactive machine is the tuning data.

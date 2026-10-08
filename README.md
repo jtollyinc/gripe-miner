@@ -1,10 +1,11 @@
-# Gripe Miner + Session Patterns + Automate
+# Gripe Miner
 
-**Claude Code secretly logs every time you got frustrated, every time you hit the
-same wall twice — and every prompt you keep retyping by hand. This reads all three
-back.**
+**Your Claude Code transcripts already know what's wasting your time. This plugin reads them back: the things you complained about, the loops you keep hitting, and the prompts you keep retyping, with the tokens each one has burned.**
 
-One plugin, three reinforcing lenses over the same local transcript mine:
+<!-- TODO(demo): drop demo/gripe-miner-demo.gif into demo/ and this line goes live. -->
+![Gripe Miner demo](demo/gripe-miner-demo.gif)
+
+One plugin, three lenses over the same local transcript mine:
 
 - **Gripes** — the moments you actually complained: *"why does this keep
   resetting"*, *"this is so slow"*, *"I wish it just did X"*.
@@ -23,22 +24,16 @@ because you both complained about it *and* kept hitting it *and* kept paying for
 It is deliberately **quiet**: precision over recall, an empty result is a valid
 answer, and it never pads the list.
 
+Runs locally. Reads only your own transcripts. Makes no network calls.
+
 ---
 
 ## Install
 
+Two commands inside Claude Code:
+
 ```
 /plugin marketplace add jtollyinc/gripe-miner
-/plugin install gripe-miner@jtolly-tools
-```
-
-### Testing from this clone (not yet pushed)
-
-This checkout hasn't been pushed to GitHub yet, so point the marketplace at the
-local path instead:
-
-```
-/plugin marketplace add /opt/jollydesk/work/session-patterns-combined-20261007/gripe-miner
 /plugin install gripe-miner@jtolly-tools
 ```
 
@@ -58,6 +53,16 @@ machine defines a skill or command with the same name. The rest of this README
 uses the short forms.
 
 Optionally name an output file for any of them: `/gripe-miner:gripe-miner BACKLOG.md`.
+
+### Install from a local clone
+
+To try a checkout before it's published (or your own fork), point the
+marketplace at the directory instead of the GitHub slug:
+
+```
+/plugin marketplace add /path/to/gripe-miner
+/plugin install gripe-miner@jtolly-tools
+```
 
 ### Updating
 
@@ -89,6 +94,46 @@ running session keeps the old copy.
 Each works standalone. `/patterns` doesn't replace the others — it runs all three
 miners and adds a merged, cross-linked view on top.
 
+## What it found on a real history
+
+Run with `--all --days 60` across the author's three machines (one Linux server
+running scheduled jobs, two Windows machines used interactively), covering
+60 days of Claude Code transcripts. Dollar figures are **API list-price
+equivalents** computed from the token counts, not an actual bill.
+
+- **3.8 billion tokens, about $5.4k list-price equivalent.** 94% of those tokens
+  were cache reads. The cost driver was long sessions re-reading their own
+  history and the model tier they ran on, not how much got typed.
+- **A scheduled "is this roadmap item done?" checker** was spawning a full
+  Claude Code process on an Opus-tier model to produce a one-line JSON answer:
+  240+ runs in two weeks, roughly 56K tokens of cache write per run for a
+  171-token answer, about $120 list-equivalent. Fix: cache by evidence hash,
+  cache failures too, and run the judgement on a small model.
+- **A trip-email extractor** was doing the same thing: 250+ single-shot spawns
+  over a month, about $80. Same fix.
+- **An older model tier still in muscle memory** (typed as a `/model` switch
+  32 times) cost about $570 more over the 60 days than its successor would have,
+  because its cache reads were priced 4x higher at the same input/output price.
+- **Doubled work is measurable.** One landing page took 44 sessions in 8 days
+  (prompts repeating "do NOT rebuild from scratch"); a verify loop re-ran
+  "not actually fixed" five times; each rejection started a fresh session that
+  re-read everything.
+
+The same run also found the plugin's own blind spots, which are listed under
+[Assumptions / known gaps](#assumptions--known-gaps) below.
+
+## Privacy
+
+- Everything runs on your machine. The miners are stdlib Python scripts that
+  read `~/.claude/projects/<encoded-cwd>/*.jsonl` and nothing else.
+- No network calls, no telemetry, no second process. The only model involved is
+  the Claude Code session you are already in, which reads the miner's JSON
+  output exactly as it would read any other file in your project.
+- The output files (`GRIPES.md`, `PATTERNS.md`, `AUTOMATIONS.md`,
+  `SESSION-INSIGHTS.md`) quote your own prompts back at you. They are written
+  into the project you ran the command in, so treat them like any other file
+  with your words in it before committing them.
+
 ## How it works
 
 1. Each command runs a small stdlib-only script (`scripts/mine_gripes.py`,
@@ -114,9 +159,6 @@ miners and adds a merged, cross-linked view on top.
    a pattern is **Reinforced**; a repeated ask plus either is ranked first under
    **Automate this**, and the pattern picks the fix type (a re-teach loop plus a
    repeated ask almost always means a `CLAUDE.md` line).
-
-No second process is spawned and **nothing leaves your machine** — the miners make
-no network calls and only read your own local transcripts.
 
 ## How tokens are measured (`/automate`)
 
@@ -164,7 +206,7 @@ on any line when there's nothing to report). It's **off by default** — rename 
 to `hooks/hooks.json` to opt in; delete the `mine_asks.py` entry if you only want
 the first two.
 
-## Assumptions / known gaps (v0)
+## Assumptions / known gaps
 
 - The Session Patterns classifier is **invented from the one-pager's themes**, not
   extracted from a shipped product the way the gripe regex was (that one came from
@@ -184,6 +226,15 @@ the first two.
   fall back to a text-shape test (role-prompt preambles, markdown-headed briefs,
   probe phrasing); a person who opens a message with `# Title` or `You are a…`
   will be mistaken for a script there.
+- **Claude desktop app prompts are tagged `promptSource: "sdk"`** by the harness,
+  so on a machine where you mostly type into the desktop app the typed-only view
+  of `/automate` sees almost nothing. Use `--include-scripted` there. Found on the
+  60-day run above; a fix is on the roadmap.
+- Forked or resumed sessions duplicate transcript files: the same `message.id`
+  can appear in several files and will count once per file in ask clusters, so a
+  single conversation copied into eight files looks like eight sessions.
+- The gripe and pattern lenses have no typed/scripted filter yet: on a box that
+  mostly runs scripted jobs, job briefs and boilerplate will dominate both lists.
 - Subagent spend is not attributed; usage before the first prompt of a resumed
   session is dropped. Token totals are floors.
 - Slash-command expansion detection relies on the body being the user turn that
@@ -216,8 +267,12 @@ the first two.
 - `v0.2` — Session Patterns added as a sibling lens (`/session-patterns`, `/patterns`).
 - `v0.3` — Automate this: repeated-ask clustering + token burn (`/automate`,
   `AUTOMATIONS.md`), wired into `/patterns` as a third section.
-- A consumer **browser-extension** sibling that does the same for your ChatGPT /
-  Claude.ai chat history, fully local. See [`docs/product-spec.md`](docs/product-spec.md).
+- Next: a typed/scripted filter for the gripe and pattern lenses, desktop-app
+  prompt origin handled correctly, forked-session dedupe by `message.id`, and
+  subagent spend attributed to the prompt that spawned it.
+- **Gripe**, a consumer browser-extension sibling that does the same for your
+  ChatGPT / Claude.ai chat history, fully local. v0 is built and in testing.
+  See [`docs/product-spec.md`](docs/product-spec.md).
 
 ## License
 
