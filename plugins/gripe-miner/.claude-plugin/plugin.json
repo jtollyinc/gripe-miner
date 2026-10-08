@@ -1,6 +1,6 @@
 {
   "name": "gripe-miner",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Gripe Miner + Session Patterns + Automate: mines your own Claude Code transcripts three ways — moments you got frustrated, loops that keep repeating (stuck points, re-explaining, deferred fixes, re-setup), and the asks you keep retyping by hand together with the tokens they burn — each verified against your code and written to a ranked backlog; the third lens proposes the cheapest durable automation for each repeated ask (skill, hook, script, scheduled routine, CLAUDE.md line, MCP connector).",
   "author": {
     "name": "JTolly",

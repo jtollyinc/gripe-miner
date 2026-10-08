@@ -16,7 +16,9 @@ Bash tool before continuing (use `python3` if `python` isn't found):
 
 Useful variants: `--all` (every project on this machine — asks that cross projects
 are the best automation candidates), `--days 120`, `--min-sessions 2` (looser),
-`--include-scripted` (also cluster prompts sent by scripts / `claude -p` / cron;
+`--include-scripted` (also cluster prompts sent by scripts / `claude -p` / cron
+and slash-command runs such as `/deep-research …`, which the miner records as one
+prompt `"/name args"` with origin `command` and the command body folded in;
 those come back flagged `"scripted": true` and are a *cost* finding, never an
 automation candidate — they already are one).
 

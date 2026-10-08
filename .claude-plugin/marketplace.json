@@ -9,6 +9,7 @@
     {
       "name": "gripe-miner",
       "source": "./plugins/gripe-miner",
+      "version": "0.3.1",
       "description": "Gripe Miner + Session Patterns + Automate: turn your own Claude Code frustration, the loops you keep repeating, and the prompts you keep retyping (with their token cost) into a ranked, code-verified fix list plus automation suggestions.",
       "keywords": [
         "productivity",

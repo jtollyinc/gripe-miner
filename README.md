@@ -45,13 +45,32 @@ local path instead:
 Then, in any project:
 
 ```
-/gripe-miner          # gripes only → GRIPES.md
-/session-patterns     # patterns only → PATTERNS.md
-/automate             # repeated asks + token burn → AUTOMATIONS.md
-/patterns             # all three, cross-linked → SESSION-INSIGHTS.md
+/gripe-miner:gripe-miner        # gripes only → GRIPES.md
+/gripe-miner:session-patterns   # patterns only → PATTERNS.md
+/gripe-miner:automate           # repeated asks + token burn → AUTOMATIONS.md
+/gripe-miner:patterns           # all three, cross-linked → SESSION-INSIGHTS.md
 ```
 
-Optionally name an output file for any of them: `/gripe-miner BACKLOG.md`.
+Installed plugin skills are namespaced as `/<plugin>:<skill>`, so these are the
+names that always work. The short forms (`/automate`, `/patterns`,
+`/session-patterns`, `/gripe-miner`) also resolve as long as nothing else on your
+machine defines a skill or command with the same name. The rest of this README
+uses the short forms.
+
+Optionally name an output file for any of them: `/gripe-miner:gripe-miner BACKLOG.md`.
+
+### Updating
+
+```
+/plugin marketplace update jtolly-tools
+/plugin uninstall gripe-miner@jtolly-tools
+/plugin install gripe-miner@jtolly-tools
+```
+
+(`/plugin update gripe-miner@jtolly-tools` does the uninstall + install in one
+step on Claude Code versions that support it.) Then restart Claude Code —
+`/exit`, then `claude` — so the new skill files and scripts are loaded; a
+running session keeps the old copy.
 
 ## Requirements
 
@@ -60,12 +79,12 @@ Optionally name an output file for any of them: `/gripe-miner BACKLOG.md`.
 
 ## Commands
 
-| Command | Mines | Writes | Use when |
+| Command (namespaced / short) | Mines | Writes | Use when |
 |---|---|---|---|
-| `/gripe-miner` | Things you complained about | `GRIPES.md` | You want just the voiced frustrations |
-| `/session-patterns` | Repeating stuck/re-explain/defer/re-setup loops | `PATTERNS.md` | You want to see what keeps coming back |
-| `/automate` | Prompts you keep retyping, and what they cost | `AUTOMATIONS.md` | You want fewer repeated prompts and a smaller token bill |
-| `/patterns` | All three, merged | `SESSION-INSIGHTS.md` (sections: Reinforced, Gripes, Session Patterns, Automate this) | You want the full picture in one pass |
+| `/gripe-miner:gripe-miner` / `/gripe-miner` | Things you complained about | `GRIPES.md` | You want just the voiced frustrations |
+| `/gripe-miner:session-patterns` / `/session-patterns` | Repeating stuck/re-explain/defer/re-setup loops | `PATTERNS.md` | You want to see what keeps coming back |
+| `/gripe-miner:automate` / `/automate` | Prompts you keep retyping, and what they cost | `AUTOMATIONS.md` | You want fewer repeated prompts and a smaller token bill |
+| `/gripe-miner:patterns` / `/patterns` | All three, merged | `SESSION-INSIGHTS.md` (sections: Reinforced, Gripes, Session Patterns, Automate this) | You want the full picture in one pass |
 
 Each works standalone. `/patterns` doesn't replace the others — it runs all three
 miners and adds a merged, cross-linked view on top.
@@ -125,6 +144,17 @@ no network calls and only read your own local transcripts.
   them `promptSource: "sdk"`) are already automations, so they are skipped by
   default and reported with `--include-scripted` as `"scripted": true` clusters,
   which the skill treats as a cost finding rather than something to automate.
+  Slash-command runs (`/deep-research …`, `/commit`) are treated the same way:
+  the invocation is one prompt with origin `command` and the text `/name args`,
+  the expanded command body the harness writes right after it is folded into
+  that prompt (never clustered on its own), and the usage of the answer is
+  charged to it.
+- Harness-written user turns — image captions, "your response above was cut off
+  mid-stream" resume nudges, the local-command caveat, IDE context — never start
+  a prompt. Their follow-on usage stays with the prompt that caused it.
+- `--days` is applied per message, by each record's own timestamp (file mtime
+  only for records without one). A session file that was touched yesterday but
+  started months ago contributes only the prompts inside the window.
 
 ## Optional: a start-of-session nudge
 
@@ -156,6 +186,29 @@ the first two.
   will be mistaken for a script there.
 - Subagent spend is not attributed; usage before the first prompt of a resumed
   session is dropped. Token totals are floors.
+- Slash-command expansion detection relies on the body being the user turn that
+  immediately follows the `<command-name>` record, flagged `isMeta` or written
+  within 10 seconds of it. That shape was derived from documented transcript
+  behaviour, not observed on the machine this was built on (which has almost no
+  interactive sessions); a command whose body arrives later than that would be
+  clustered as a typed ask again.
+
+## Changelog
+
+- `v0.3.1` — three `/automate` false positives fixed, all found on a real
+  1,950-prompt history where every "repeated ask" was harness text:
+  - the `<local-command-caveat>` sentence (and `ide_opened_file` /
+    `ide_selection` context) is stripped with its content, not just its tags;
+  - the resume nudge is recognised in its current wording ("…was cut off
+    mid-stream…") and reasonable variants, not only "…was stopped";
+  - `--days` filters per message by timestamp instead of per file by mtime, for
+    all three miners (gripes and patterns included — a recently-touched session
+    file no longer drags its whole history into the window);
+  - slash-command runs are classified as `command` (already automated, skipped
+    unless `--include-scripted`) and their expanded bodies are never clustered;
+  - harness `isMeta` turns (captions, nudges) no longer split a prompt's usage;
+  - regression tests under `tests/` (`python -m unittest` from the repo root).
+- `v0.3.0` — Automate this lens.
 
 ## Roadmap
 
